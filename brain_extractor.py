@@ -48,7 +48,7 @@ class BrainExtractor(object):
         res_mask = label_mask_img.copy()
         res_mask[label_mask_img == max_label] = 255
         res_mask[label_mask_img != max_label] = 0
-        itk_res_mask = self.array2image(res_mask)
+        itk_res_mask = self.array2image(res_mask, itk_binary_img)
         return itk_res_mask
 
     def get_brain_mask(self, itk_img, th=70):
