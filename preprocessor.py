@@ -11,8 +11,8 @@ from skimage.transform import resize
 
 
 class Preprocessor(object):
-    def __init__(self, img_path):
-        self.img_path = img_path
+    def __init__(self):
+        pass
 
     def array2image(self, array, origin_image, new_spacing=None):
         rec_image = sitk.GetImageFromArray(array)
@@ -157,8 +157,8 @@ class Preprocessor(object):
                                                   do_separate_z=True, order_z=0)
         return self.array2image(resampled_img, itk_img, self.target_spacing)
 
-    def run(self):
-        itk_img = sitk.ReadImage(self.img_path)
+    def run(self, img_path):
+        itk_img = sitk.ReadImage(img_path)
         cropped_img, cropped_nonzero_mask = self.crop_image(itk_img)
         resampled_img = self.resample_patient(itk_img, cropped_img)
         return resampled_img
