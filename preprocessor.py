@@ -159,6 +159,7 @@ class Preprocessor(object):
 
     def run(self, img_path):
         itk_img = sitk.ReadImage(img_path)
+        itk_img = sitk.DICOMOrient(itk_img, 'LPS')
         cropped_img, cropped_nonzero_mask = self.crop_image(itk_img)
         resampled_img = self.resample_patient(itk_img, cropped_img)
         return resampled_img
