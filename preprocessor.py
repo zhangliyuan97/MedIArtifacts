@@ -11,8 +11,8 @@ from skimage.transform import resize
 
 
 class Preprocessor(object):
-    def __init__(self):
-        pass
+    def __init__(self, target_spacing):
+        self.target_spacing = target_spacing
 
     def array2image(self, array, origin_image, new_spacing=None):
         rec_image = sitk.GetImageFromArray(array)
