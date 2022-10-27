@@ -2,7 +2,7 @@ from PIL import Image
 from os.path import join
 
 
-def concat_images(image_files):
+def concat_images(image_files, save_dir):
     # image_files: PIL object list
     COL = 4
     ROW = 50
