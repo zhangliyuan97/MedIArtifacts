@@ -1,10 +1,7 @@
-import os
-import glob
 import numpy as np
 import SimpleITK as sitk
-from tqdm import tqdm
 from collections import OrderedDict
-from brain_extractor import BrainExtractor
+from preprocess.brain_extractor import BrainExtractor
 from scipy.ndimage.interpolation import map_coordinates
 from batchgenerators.augmentations.utils import resize_segmentation
 from skimage.transform import resize
