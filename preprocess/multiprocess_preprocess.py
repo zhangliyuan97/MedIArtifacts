@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 
 
-def multiprocess_pre(lbl_path, dwi_dir, flair_dir):
+def multiprocess_pre(lbl_path, dwi_dir, flair_dir, process_num):
     lbl_df = pd.read_csv(lbl_path, sep='')
 
     for pid in lbl_df['code_n']:
@@ -17,7 +17,7 @@ def multiprocess_pre(lbl_path, dwi_dir, flair_dir):
             flair_path = glob.glob(os.path.join(flair_dir, str(pid), "*.nii.gz"))[0]
 
             process_list = []
-            for i in range(6):
+            for i in range(process_num):
                 p = Process(target=preprocess, args=(pid, dwi_path, flair_path))
                 p.start()
                 process_list.append(p)
@@ -40,4 +40,4 @@ if __name__ == '__main__':
     label_path = ""
     dwi_dir = ""
     flair_dir = ""
-    multiprocess_pre(label_path, dwi_dir, flair_dir)
+    multiprocess_pre(label_path, dwi_dir, flair_dir, process_num=40)
