@@ -152,16 +152,20 @@ class Preprocessor(object):
     def __init__(self, target_spacing):
         self.target_spacing = target_spacing
 
-    def resample_patient(self, itk_img, cropped_img):
+    def resample_patient(self, itk_img, cropped_img, cropped_mask):
         new_shape = get_new_shape(itk_img, cropped_img, self.target_spacing)
         cropped_img = np.expand_dims(cropped_img, axis=0)
+        cropped_mask = np.expand_dims(cropped_mask, axis=0)
         resampled_img = resample_data_or_seg(cropped_img, new_shape, is_seg=False, axis=[0],
-                                                  do_separate_z=True, order_z=0)
-        return array2image(resampled_img, itk_img, self.target_spacing)
+                                             do_separate_z=True, order_z=0)
+        resampled_mask = resample_data_or_seg(cropped_mask, new_shape, is_seg=True, axis=[0],
+                                              do_separate_z=True, order_z=0)
+        return array2image(resampled_img, itk_img, self.target_spacing), array2image(resampled_mask, itk_img,
+                                                                                     self.target_spacing)
 
     def run(self, img_path):
         itk_img = sitk.ReadImage(img_path)
         itk_img = sitk.DICOMOrient(itk_img, 'LPS')
         cropped_img, cropped_nonzero_mask = crop_image(itk_img)
-        resampled_img = self.resample_patient(itk_img, cropped_img)
-        return resampled_img
+        resampled_img, resampled_mask = self.resample_patient(itk_img, cropped_img, cropped_nonzero_mask)
+        return resampled_img, resampled_mask
