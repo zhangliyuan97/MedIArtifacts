@@ -1,4 +1,4 @@
-mport numpy as np
+import numpy as np
 from batchgenerators.transforms.color_transforms import GammaTransform, ContrastAugmentationTransform
 from batchgenerators.transforms.spatial_transforms import SpatialTransform, MirrorTransform
 from batchgenerators.transforms.noise_transforms import GaussianBlurTransform, GaussianNoiseTransform
@@ -37,7 +37,8 @@ def get_transformations(cfg):
     if 'noise' in transforms_string:
         transforms.append(GaussianNoiseTransform(noise_variance=(0, .1), p_per_sample=.2))
     if 'blur' in transforms_string:
-        transforms.append(GaussianBlurTransform(blur_sigma=(.5, 1.0), different_sigma_per_channel=True, p_per_channel=.5, p_per_sample=.2))
+        transforms.append(
+            GaussianBlurTransform(blur_sigma=(.5, 1.0), different_sigma_per_channel=True, p_per_channel=.5,
+                                  p_per_sample=.2))
 
     return Compose(transforms)
-
