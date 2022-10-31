@@ -5,6 +5,7 @@ import torch
 from torch.utils.data import Sampler
 import torch.distributed as dist
 
+from torch.utils.data.sampler import WeightedRandomSampler
 
 class DistributedWeightedSampler(Sampler):
     def __init__(self, dataset, num_replicas=None, rank=None, replacement=True, shuffle=True):
@@ -59,3 +60,11 @@ class DistributedWeightedSampler(Sampler):
 
     def set_epoch(self, epoch):
         self.epoch = epoch
+
+
+    def get_weighted_random_sampler(dataset):
+        targets = dataset.targets
+        class_sample_count = torch.tensor([targets == t].sum() for t in np.unique(targets))
+        weight = 1. / class_sample_count.double()
+        samples_weight = torch.tensor([weight[t] for t in targets])
+        return WeightedRandomSampler(samples_weight, len(samples_weight))
