@@ -1,26 +1,31 @@
-from cls_task.network_architecture.resnet import *
 import torch
+from cls_task.network_architecture.resnet import *
 from cls_task.training.learning_rate.poly_lr import PolyLR
 from cls_task.training.learning_rate.linear_lr import LinearLR
+from collections import OrderedDict
 
 
 class NetworkTrainer:
     def __init__(self, cfg, writer, logger, visual, log_save_dir):
+        self.optimizers_cls = None
+        self.lr_scheduler_cls = None
+        self.lr_schedulers = None
+        self.optimzier_cls = None
+        self.epoch_outputs = None
+        self.epoch_labels = None
+        self.epoch_loss = None
+        self.inputs = None
+        self.cls_labels = None
+        self.cls_net = None
+
         self.cfg = cfg
         self.writer = writer
         self.logger = logger
         self.visual = visual
         self.log_save_dir = log_save_dir
 
-        self.optimzier_cls = None
-        self.epoch_outputs = None
-        self.epoch_labels = None
-        self.epoch_loss = None
-
-        self.inputs = None
-        self.cls_labels = None
-
-        self.cls_net = None
+        self.iter = 0
+        self.ce_loss = nn.CrossEntropyLoss()
 
     def reset_epoch_params(self):
         self.epoch_outputs = []
@@ -34,6 +39,33 @@ class NetworkTrainer:
     def cls_forward(self, inputs):
         out_dict = self.cls_net(inputs)
         return out_dict
+
+    def cls_model_backward(self, train=False):
+        log_losses = dict()
+        flatten_feats, outputs = self.cls_forward(self.inputs)
+        loss = self.ce_loss(outputs, self.cls_labels)
+        if train:
+            log_losses['cls_loss/loss_ce'] = loss.detach()
+            self.visual.plot_current_errors(log_losses, self.iter)
+        self.epoch_loss.append(loss.item())
+        output_g = outputs
+        target_g = self.cls_labels
+        self.epoch_outputs.append(torch.softmax(output_g, dim=1).detach().data.cpu())
+        self.epoch_labels.append(target_g.data.cpu())
+
+        return loss
+
+    def lr_scheduler_step(self):
+        for lr_s in self.lr_schedulers:
+            lr_s.step()
+
+    def optimizers_zero_grad(self):
+        for optim in self.optimizers:
+            optim.zero_grad()
+
+    def optimizers_step(self):
+        for optim in self.optimizers:
+            optim.step()
 
     def init_nets(self):
         self.cls_net = generate_model(18)
@@ -63,7 +95,7 @@ class NetworkTrainer:
         self.optimizers = [self.optimzier_cls]
 
     def init_lr_schedulers(self, epoch_batches):
-        n_epochs = self.config['training']['n_epochs']
+        n_epochs = self.cfg['training']['n_epochs']
 
         if self.cfg['model']['lr_scheduler'] == 'poly':
             self.lr_scheduler_cls = torch.optim.lr_scheduler.LambdaLR(self.optimizers_cls,
@@ -74,3 +106,28 @@ class NetworkTrainer:
                                                                       lr_lambda=LinearLR(n_epochs * epoch_batches,
                                                                                          0).step)
         self.lr_schedulers = [self.lr_scheduler_cls]
+
+    def load_pretrained_weights(self, pth):
+        self.cls_net.load_state_dict(torch.load(pth))
+
+    def train(self):
+        for net in self.nets:
+            net.train()
+
+    def eval(self):
+        for net in self.nets:
+            net.eval()
+
+    def visualization(self, tag='train'):
+        visual_list = []
+        visual_list += {('b1', self.inputs[:, 0, 10, :, :].cpu().unsqueeze(1))}
+        self.visual.display_current_results(OrderedDict(visual_list), tag, self.iter)
+
+    def train_step(self):
+        self.optimizers_zero_grad()
+        loss = self.cls_model_backward(train=True)
+        loss.backward()
+        self.optimizers_step()
+        self.lr_scheduler_step()
+
+        return loss.detach()
