@@ -1,5 +1,7 @@
 from cls_task.network_architecture.resnet import *
 import torch
+from cls_task.training.learning_rate.poly_lr import PolyLR
+from cls_task.training.learning_rate.linear_lr import LinearLR
 
 
 class NetworkTrainer:
@@ -59,3 +61,16 @@ class NetworkTrainer:
             self.optimzier_cls = torch.optim.SGD(parameters, lr=lr, momentum=momentum, weight_decay=weight_decay)
 
         self.optimizers = [self.optimzier_cls]
+
+    def init_lr_schedulers(self, epoch_batches):
+        n_epochs = self.config['training']['n_epochs']
+
+        if self.cfg['model']['lr_scheduler'] == 'poly':
+            self.lr_scheduler_cls = torch.optim.lr_scheduler.LambdaLR(self.optimizers_cls,
+                                                                      lr_lambda=PolyLR(n_epochs * epoch_batches,
+                                                                                       0, ).step)
+        elif self.cfg['model']['lr_scheduler'] == 'linear':
+            self.lr_scheduler_cls = torch.optim.lr_scheduler.LambdaLR(self.optimzier_cls,
+                                                                      lr_lambda=LinearLR(n_epochs * epoch_batches,
+                                                                                         0).step)
+        self.lr_schedulers = [self.lr_scheduler_cls]
