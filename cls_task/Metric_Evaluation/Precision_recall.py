@@ -7,7 +7,7 @@ from inspect import signature
 
 def prc(targets, probas, precison=0.9):
     """
-    Compute the precision and recall values for Classification's output
+    Compute the precision and recall values for Classification's output, and plot P-R curve
 
     Args:
         targets (np.array): Ground Truth of Evaluation Dataset 
