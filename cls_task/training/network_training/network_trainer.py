@@ -1,9 +1,11 @@
 import torch
 import numpy as np
+from collections import OrderedDict
+
 from cls_task.network_architecture.resnet import *
 from cls_task.training.learning_rate.poly_lr import PolyLR
 from cls_task.training.learning_rate.linear_lr import LinearLR
-from collections import OrderedDict
+from cls_task.evaluation.metrics import metric, multi_cls_roc_auc_score
 
 
 class NetworkTrainer:
@@ -137,7 +139,7 @@ class NetworkTrainer:
     def train_metric_record(self, epoch, epochs):
         self.visualization('train')
         epoch_outputs = torch.cat(self.epoch_outputs).numpy()
-        epoch_labels = torch.cart(self.epoch_labels).numpy()
+        epoch_labels = torch.cat(self.epoch_labels).numpy()
         if np.isnan(epoch_outputs).sum() > 0 or np.isinf(epoch_outputs).sum() > 0:
             self.logger.info('Epoch [{}/{}], train auc: NAN/INF, acc: NAN/INF, loss: NAN/INF'.format(epoch, epochs))
         else:
