@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 from cls_task.network_architecture.resnet import *
 from cls_task.training.learning_rate.poly_lr import PolyLR
 from cls_task.training.learning_rate.linear_lr import LinearLR
@@ -7,16 +8,17 @@ from collections import OrderedDict
 
 class NetworkTrainer:
     def __init__(self, cfg, writer, logger, visual, log_save_dir):
+        self.optimizers = None
         self.optimizers_cls = None
         self.lr_scheduler_cls = None
         self.lr_schedulers = None
-        self.optimzier_cls = None
         self.epoch_outputs = None
         self.epoch_labels = None
         self.epoch_loss = None
         self.inputs = None
         self.cls_labels = None
         self.cls_net = None
+        self.nets = None
 
         self.cfg = cfg
         self.writer = writer
@@ -86,11 +88,11 @@ class NetworkTrainer:
         parameters = [{'params': bias_list, 'weight_decay': 0}, {'params': other_list}]
 
         if optimizer_name == 'adam':
-            self.optimzier_cls = torch.optim.Adam(parameters, lr=lr, betas=betas, weight_decay=weight_decay)
+            self.optimizers_cls = torch.optim.Adam(parameters, lr=lr, betas=betas, weight_decay=weight_decay)
         elif optimizer_name == 'sgd':
-            self.optimzier_cls = torch.optim.SGD(parameters, lr=lr, momentum=momentum, weight_decay=weight_decay)
+            self.optimizers_cls = torch.optim.SGD(parameters, lr=lr, momentum=momentum, weight_decay=weight_decay)
         else:
-            self.optimzier_cls = torch.optim.SGD(parameters, lr=lr, momentum=momentum, weight_decay=weight_decay)
+            self.optimizers_cls = torch.optim.SGD(parameters, lr=lr, momentum=momentum, weight_decay=weight_decay)
 
         self.optimizers = [self.optimzier_cls]
 
@@ -131,3 +133,18 @@ class NetworkTrainer:
         self.lr_scheduler_step()
 
         return loss.detach()
+
+    def train_metric_record(self, epoch, epochs):
+        self.visualization('train')
+        epoch_outputs = torch.cat(self.epoch_outputs).numpy()
+        epoch_labels = torch.cart(self.epoch_labels).numpy()
+        if np.isnan(epoch_outputs).sum() > 0 or np.isinf(epoch_outputs).sum() > 0:
+            self.logger.info('Epoch [{}/{}], train auc: NAN/INF, acc: NAN/INF, loss: NAN/INF'.format(epoch, epochs))
+        else:
+            train_metric = metric(epoch_outputs, epoch_labels)
+            train_auc_list = multi_cls_roc_auc_score(epoch_outputs, epoch_labels)
+            self.logger.info('Epoch [{}/{}], train auc: {:.3f}, acc: {:.3f}, loss: {:.3f}'.format(epoch, epochs, np.mean(train_auc_list), train_metric['acc'], np.mean(self.epoch_loss)))
+            self.writer.add_scalar('train_avg/auc', np.mean(train_auc_list), epoch)
+            self.writer.add_scalar('train_avg/acc', train_metric['acc'], epoch)
+            self.writer.add_scalar('train_avg/auc', np.mean(self.epoch_loss), epoch)
+
