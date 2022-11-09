@@ -1,3 +1,4 @@
+from macpath import join
 from preprocessor import Preprocessor
 import SimpleITk as sitk
 import os, glob
@@ -34,6 +35,26 @@ def preprocess(pid, dwi_path, flair_path):
     dwi_arr = sitk.GetArrayFromImage(sitk_dwi)
     flair_arr = sitk.GetArrayFromImage(sitk_flair)
     np.savez(f"../../dataset/{pid}.pnz", dwi=dwi_arr, flair=flair_arr)
+
+process_list = []
+data_dir = ""
+cpu_count = 8
+subjects = list(glob(join(data_dir, "*.nii.gz")))
+remainder = len(subjects) % cpu_count
+batch = len(subjects) // cpu_count
+for i in range(cpu_count):
+    if i == (cpu_count - 1):
+        this_subjects = subjects[i * batch:]
+    else:
+        this_subjects = subjects[i*batch : (i+1)*batch]
+    p = Process(target=preprocessfun, args=(this_subjects,))
+    p.start()
+    process_list.append(p)
+
+for _ in process_list:
+    p.join()
+
+print("preprocess end!")
 
 
 if __name__ == '__main__':

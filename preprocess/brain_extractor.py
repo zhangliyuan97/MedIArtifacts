@@ -51,8 +51,9 @@ class BrainExtractor(object):
         itk_res_mask = self.array2image(res_mask, itk_binary_img)
         return itk_res_mask
 
-    def get_brain_mask(self, itk_img, th=70):
+    def get_brain_mask(self, itk_img):
         img = sitk.GetArrayFromImage(itk_img)
+        th = np.percentile(img, 50)          # for ct image, th=0 is just fine, for MR image, use 50 percentile
         binary_img = self.binarize_img(img, itk_img, th=th)
         largest_cc_img_mask = self._get_largest_connected_component(binary_img)
         img_lcc_arr = sitk.GetArrayFromImage(largest_cc_img_mask)

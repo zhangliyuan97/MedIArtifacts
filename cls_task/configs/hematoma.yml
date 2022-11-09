@@ -1,0 +1,45 @@
+description: predict the probability [0, 1] of hematoma expansion, logistic regression (sigmoid)
+
+in_channels: 1
+n_classes: 1        # logistic regression
+random_seed: 88
+
+model:
+  arch: res10_in  # support [res10, res18, res34, res_50, res_101] with instance norm (_in) or batch norm (_bn)
+  optimizer:
+    name: adam
+    lr: 0.003
+    momentum: 0.9        # only work if name is sgd
+    betas: [0.9, 0.999]  # only work if name is adam
+    weight_decay: 0.00005
+  lr_scheduler:
+    name: poly           # lr_schedule lambda, see trainers.xxx.init_lr_schedules
+    start_from: 0
+
+data:
+  # dataset split parameters
+  name: hematoma               # datasets.__init__ will import datasets of this name automatically, like import datasets.hematoma_loader
+  csv_file: data/hematoma.csv  # hematoma dataset attributes including patient_id, come from which hospital, expansion or not
+  hospital: all                # want to select the domain of dataset, ['all', "tiantan", "xuanwu"]
+  npz_dir: data/hematoma_npz   # all 3D brain image and its nonzero_mask npz (brain_image, non_zeromask)
+  fold: 0                      # for cross-validation [0, 1, 2, 3, 4]
+  is_zq: True                  # using zhangqiang's train/valid/test dataset splits
+
+  # torch.dataloader options
+  batch_size: 8
+  num_workers: 8
+  is_shuffle_batch: True       # True: sampling training mini-batch randomly, False: use train_sampler option
+  train_sampler: hard          # class-balanced mini-batch sampler, hard means uniformly sampled from training data over whole training
+
+  # input data options
+  img_size: [40, 480, 480]
+  use_seg: False               # use hematoma segmentations or not
+  is_transform: True           # use augmentations or not
+  transforms: gamma_contrast_mirror_rotate_scale_crop_noise_blur   # you need to define augmentation random parameters in datasets.augmentations handcraftedly
+
+training:
+  n_epochs: 20
+  n_steps: 20000
+
+  ddp_mode: True               # torch Distributed DataParallel mode or plain single-GPU mode
+

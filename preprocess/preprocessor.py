@@ -1,3 +1,6 @@
+"""You need to modify this file to fit your data organizations.
+"""
+
 import numpy as np
 import SimpleITK as sitk
 from collections import OrderedDict
@@ -28,20 +31,21 @@ def array2image(array, origin_image, new_spacing=None):
     return rec_image
 
 
-def resample_data_or_seg(data, new_shape, is_seg, axis=None, order=3, do_separate_z=False, order_z=0):
+def resample_data_or_seg(data, new_shape, order=0, do_separate_z=False, order_z=0):
     """
     separate_z=True will resample with order 0 along z
     :param data:
     :param new_shape:
-    :param is_seg:
     :param axis:
-    :param order:
+    :param order: interpolation modes, order 0 for image, order 3 for segmentations
     :param do_separate_z:
     :param order_z: only applies if do_separate_z is True
     :return:
     """
     assert len(data.shape) == 4, "data must be (c, x, y, z)"
     assert len(new_shape) == len(data.shape) - 1
+    resize_fn = resize
+    
     if is_seg:
         resize_fn = resize_segmentation
         kwargs = OrderedDict()
