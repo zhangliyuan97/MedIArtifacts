@@ -83,17 +83,17 @@ class HematomaDataLoader():
         self.train_dataset = hematoma_dataset(
             data_path, df_dict["train"], tuple(data_config["img_size"]), is_transform=is_transform,
             mean=train_mean, std=train_std, clip_high=clip_high, clip_low=clip_low,
-            transforms=transforms, use_seg=use_seg
+            transforms=transforms, use_seg=use_seg, is_train=True,
         )
         self.valid_dataset = hematoma_dataset(
-            data_path, df_dict["valid"], tuple(data_config["img_size"]), is_transform=is_transform,
+            data_path, df_dict["valid"], tuple(data_config["img_size"]), is_transform=False,
             mean=train_mean, std=train_std, clip_high=clip_high, clip_low=clip_low,
-            transforms=transforms, use_seg=use_seg
+            transforms=transforms, use_seg=use_seg, is_train=False,
         )
         self.test_dataset = hematoma_dataset(
-            data_path, df_dict["test"], tuple(data_config["img_size"]), is_transform=is_transform,
+            data_path, df_dict["test"], tuple(data_config["img_size"]), is_transform=False,
             mean=train_mean, std=train_std, clip_high=clip_high, clip_low=clip_low,
-            transforms=transforms, use_seg=use_seg
+            transforms=transforms, use_seg=use_seg, is_train=False,
         )
 
         # construct sampler for class-imbalanced data
@@ -118,7 +118,7 @@ class HematomaDataLoader():
         valid_sampler = None
         self.valid_loader = DataLoader(
             self.valid_dataset,
-            self.cfg['data']['batch_size'],
+            1,
             shuffle=False,
             num_workers=self.cfg['data']['num_workers'],
             pin_memory=True, drop_last=False,
@@ -127,7 +127,7 @@ class HematomaDataLoader():
 
         self.test_loader = DataLoader(
             self.test_dataset,
-            self.cfg['data']['batch_size'],
+            1,
             shuffle=False,
             num_workers=self.cfg['data']['num_workers'],
             pin_memory=True, drop_last=False,

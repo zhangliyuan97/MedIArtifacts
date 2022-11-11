@@ -3,11 +3,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sklearn.metrics as metrics
 
-def plot_roc_curve(labels,preds,savepath):
+def plot_roc_curve(preds, labels, savepath):
     """
     Args:
-        labels : ground truth
         preds : model prediction
+        labels : ground truth
         savepath : save path 
     """
     fpr1, tpr1, threshold1 = metrics.roc_curve(labels, preds)  ###计算真正率和假正率

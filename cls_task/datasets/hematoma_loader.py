@@ -9,12 +9,13 @@ from glob import glob
 
 
 class hematoma_loader(Dataset):
-    def __init__(self, sub_root, csv_dataframe, img_size, is_transform, mean, std, clip_high, clip_low, transforms=None, use_seg=False):
+    def __init__(self, sub_root, csv_dataframe, img_size, is_transform, mean, std, clip_high, clip_low, transforms=None, use_seg=False, is_train=False):
         self.sub_root = sub_root
         self.img_size = img_size
         self.is_transform = is_transform
         self.transforms = transforms
         self.use_seg = use_seg
+        self.is_train = is_train   # this will control pad_or_crop & transforms whether or not
         
         # for ct images, we just statistic the foreground pixels to find the mean and std previously
         self.mean = mean
@@ -105,15 +106,17 @@ class hematoma_loader(Dataset):
         img_ct = img_seg_npz["data"]
         
         img_ct = self._normalize_over_voxels_all(img_ct)
-
-        img_ct = self._pad_or_crop_to_img_size(img_ct, seg=None, img_size=self.img_size, mode="constant")["padded_img"]
         
-        data = img_ct[None, None, ...]
-        if self.transforms and self.is_transform:
-            data_dict = self.transforms(**{"data": data})
-            data = np.squeeze(data_dict["data"])
+        if self.is_train:
+            img_ct = self._pad_or_crop_to_img_size(img_ct, seg=None, img_size=self.img_size, mode="constant")["padded_img"]
+            
+            data = img_ct[None, None, ...]
+            if self.transforms and self.is_transform:
+                data_dict = self.transforms(**{"data": data})
+                data = np.squeeze(data_dict["data"])
         
-        img_ct = np.squeeze(data)
+            img_ct = np.squeeze(data)
+            
         img_ct = self._to_tensor(img_ct)
         # seg = self._to_tensor(np.squeeze(seg)) - 0.5
         

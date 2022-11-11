@@ -143,6 +143,8 @@ def train(cfg, writer, logger, visual, logdir):
             model_dir = os.path.join(logdir, "best_auc_model")
             os.makedirs(model_dir, exist_ok=True)
             model.save_valid_best_model(model_dir)
+        
+        print("Best valid AUC: {:.3f}, training step: {:6d}".format(best_valid_auc, best_step))
 
             
 
