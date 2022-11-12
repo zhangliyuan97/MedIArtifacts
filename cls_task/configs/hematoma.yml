@@ -37,6 +37,11 @@ data:
   is_transform: True           # use augmentations or not
   transforms: gamma_contrast_mirror_rotate_scale_crop_noise_blur   # you need to define augmentation random parameters in datasets.augmentations handcraftedly
 
+loss:
+  name: bce      # bce or focal
+  alpha: 0.25    # focal loss alpha
+  gamma: 2       # focal loss gamma
+
 training:
   n_epochs: 20
   n_steps: 20000

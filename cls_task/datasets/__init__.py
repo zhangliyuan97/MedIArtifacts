@@ -82,17 +82,14 @@ class HematomaDataLoader():
         
         self.train_dataset = hematoma_dataset(
             data_path, df_dict["train"], tuple(data_config["img_size"]), is_transform=is_transform,
-            mean=train_mean, std=train_std, clip_high=clip_high, clip_low=clip_low,
             transforms=transforms, use_seg=use_seg, is_train=True,
         )
         self.valid_dataset = hematoma_dataset(
             data_path, df_dict["valid"], tuple(data_config["img_size"]), is_transform=False,
-            mean=train_mean, std=train_std, clip_high=clip_high, clip_low=clip_low,
-            transforms=transforms, use_seg=use_seg, is_train=False,
+            transforms=transforms, use_seg=use_seg, is_train=True,
         )
         self.test_dataset = hematoma_dataset(
             data_path, df_dict["test"], tuple(data_config["img_size"]), is_transform=False,
-            mean=train_mean, std=train_std, clip_high=clip_high, clip_low=clip_low,
             transforms=transforms, use_seg=use_seg, is_train=False,
         )
 

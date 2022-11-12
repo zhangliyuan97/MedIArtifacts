@@ -7,6 +7,7 @@ import numpy as np
 
 from models.resnet import get_resnet_model
 from trainers.training_utils.lr_shcedules import get_lr_schedule
+from losses import get_loss
 from utils import metrics
 
 
@@ -27,8 +28,10 @@ class NetworkTrainer:
         self.epoch_loss = None
 
         self.iter = 0
-        self.ce_loss = nn.CrossEntropyLoss()   # for multi-class classification problems
-        self.bce = nn.BCEWithLogitsLoss()      # for logistic regression problems
+        self.loss = get_loss(loss_name=self.cfg['loss']['name'], alpha=self.cfg['loss']['alpha'], gamma=self.cfg['loss']['gamma'])
+        # self.ce_loss = nn.CrossEntropyLoss()   # for multi-class classification problems
+        # self.bce = nn.BCEWithLogitsLoss()      # for logistic regression problems
+        # self.focal_loss = FocalLossV2(alpha=self.cfg['loss']['alpha'], gamma=self.cfg['loss']['gamma'])
 
     def reset_epoch_records(self):
         self.epoch_outputs = []
@@ -48,7 +51,7 @@ class NetworkTrainer:
     @torch.no_grad()
     def cls_evaluation(self):     # evaluate a mini-batch 
         out_dict = self.cls_net_forward(self.inputs)
-        loss = self.bce(out_dict["outputs"], self.cls_labels.float())
+        loss = self.loss(out_dict["outputs"], self.cls_labels.float())
 
         self.epoch_loss.append(loss.item())
         output_g = out_dict["outputs"]
@@ -62,7 +65,7 @@ class NetworkTrainer:
         log_losses = dict()
         
         out_dict = self.cls_net_forward(self.inputs)
-        loss = self.bce(out_dict["outputs"], self.cls_labels.float())  # if labels not float, then BCEWithLogits will raise Exception
+        loss = self.loss(out_dict["outputs"], self.cls_labels.float())  # if labels not float, then BCEWithLogits will raise Exception
 
         log_losses['cls_loss/loss_ce'] = loss.detach()
         self.visual.plot_current_errors(log_losses, self.iter)

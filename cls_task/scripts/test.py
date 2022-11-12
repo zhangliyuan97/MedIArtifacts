@@ -7,6 +7,7 @@ import random
 import argparse
 from tqdm import tqdm
 
+import numpy as np
 import torch
 
 from datasets import create_dataset
@@ -39,9 +40,12 @@ def test(cfg, model_path, figure_dir):
         inputs = test_batch['inputs'].cuda()
         cls_labels = test_batch['cls_labels']
         
-        outputs = cls_net(inputs)
+        outputs = []
+        for input_patch in inputs:
+            output = cls_net(input_patch)
+            outputs.append(torch.sigmoid(output).detach().data.cpu())
         
-        epoch_outputs.append(torch.sigmoid(outputs).detach().data.cpu())
+        epoch_outputs.append(torch.mean(torch.from_numpy(outputs)))
         epoch_labels.append(cls_labels)
     
     epoch_outputs = torch.cat(epoch_outputs).numpy()
